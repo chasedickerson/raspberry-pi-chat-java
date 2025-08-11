@@ -95,7 +95,9 @@ raspberry-pi-chat-java/
 ```
 
 ## Python Source Code
-WIP
+
+https://github.com/chasedickerson/raspberry-pi-chat-python
+
 Java/Gradle can be difficult to setup locally if not already done so here is a python version of the code that works the same way
 
 
