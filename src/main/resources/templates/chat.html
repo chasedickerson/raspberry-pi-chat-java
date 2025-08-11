@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Chat</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #222;
+            color: white;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 800px;
+            background-color: #333;
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 80vh;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #444;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            max-height: 500px;
+        }
+
+        .message {
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 5px;
+            background-color: #555;
+            word-wrap: break-word;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-area textarea {
+            flex-grow: 1;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #555;
+            color: white;
+            border: 1px solid #666;
+            font-size: 16px;
+        }
+
+        .input-area button {
+            padding: 10px 20px;
+            background-color: #1e90ff;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .input-area button:hover {
+            background-color: #4682b4;
+        }
+
+        .upload-area {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .upload-area input {
+            padding: 10px;
+            background-color: #1e90ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .upload-area input[type="file"] {
+            display: none;
+        }
+
+        .upload-area label {
+            cursor: pointer;
+        }
+
+        pre {
+            background-color: #222;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        code {
+            font-family: monospace;
+        }
+    </style>
+
+    <!-- Include STOMP.js -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+
+    <!-- Include Marked.js for Markdown Rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- Include Highlight.js for Code Formatting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+</head>
+<body>
+
+<div class="chat-container">
+    <h1>Raspberry Pi Chat</h1>
+
+    <div class="messages" id="messages">
+        <!-- Messages will be appended here -->
+    </div>
+
+    <div class="input-area">
+        <textarea id="message-input" placeholder="Type a message..." rows="2"></textarea>
+        <button id="send-btn">Send</button>
+    </div>
+
+    <div class="upload-area">
+        <label for="file-upload">Upload File</label>
+        <input type="file" id="file-upload" />
+    </div>
+</div>
+
+<script>
+    // WebSocket connection
+    const socket = new SockJS('/chat');
+    const stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, function (frame) {
+        console.log("Connected: " + frame);
+
+        stompClient.subscribe('/topic/messages', function (message) {
+            appendMessage(JSON.parse(message.body).content);
+        });
+    });
+
+    document.getElementById('send-btn').onclick = function() {
+        const message = document.getElementById('message-input').value;
+        if (message) {
+            stompClient.send("/app/chat", {}, JSON.stringify({ 'content': message }));
+            document.getElementById('message-input').value = '';
+        }
+    };
+
+    // Allow sending message on Enter key press
+    document.getElementById('message-input').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            document.getElementById('send-btn').click();
+        }
+    });
+
+    function appendMessage(message) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message');
+
+        // Convert markdown to HTML
+        //messageElement.innerHTML = marked.parse(message);
+
+        // Process markdown: look for code blocks and format them
+        messageElement.innerHTML = processMarkdown(message);
+
+        // Apply syntax highlighting after rendering markdown
+        messageElement.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightElement(block);
+        });
+
+        document.getElementById('messages').appendChild(messageElement);
+        scrollToBottom();
+    }
+
+    function scrollToBottom() {
+        const messages = document.getElementById('messages');
+        messages.scrollTop = messages.scrollHeight;
+    }
+
+    // Function to process markdown, specifically for code blocks
+        function processMarkdown(message) {
+            // Replace ```code block``` with formatted <pre> tag
+            message = message.replace(/```(.*?)```/gs, function(match, p1) {
+                return `<pre><code>${p1.trim()}</code></pre>`;
+            });
+            return message;
+        }
+
+    // Handle file upload
+    document.getElementById('file-upload').onchange = function(event) {
+        const formData = new FormData();
+        formData.append('file', event.target.files[0]);
+
+        fetch('/upload', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.fileUrl) {
+                const filename = event.target.files[0].name; // Get the actual file name
+                const fileMessage = `<a href="${data.fileUrl}" target="_blank">${filename}</a>`;
+                stompClient.send("/app/chat", {}, JSON.stringify({ 'content': fileMessage }));
+                //appendMessage(fileMessage);
+            }
+        })
+        .catch(error => console.error('Error uploading file:', error));
+    };
+</script>
+
+</body>
+</html>
