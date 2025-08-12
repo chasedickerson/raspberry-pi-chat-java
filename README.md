@@ -59,6 +59,7 @@ Raspberry Pi -
 ## Prerequisites
 
 - Java Development Kit (JDK) 23 or later
+- Gradle gradle-8.12.1 or later
 - A Raspberry Pi (any model with Java support) or any computer with Java installed
 - A local network connection for all devices involved
 
