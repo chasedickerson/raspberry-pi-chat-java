@@ -1,4 +1,5 @@
-# Raspberry Pi Chat (Java)
+# <img width="50" height="50" alt="image" src="https://github.com/user-attachments/assets/feebc783-bde7-470e-96d0-50071ceadd94" /> Raspberry Pi Chat (Java)  <img width="50" height="50" alt="image" src="https://github.com/user-attachments/assets/7809e2d5-d1cc-477c-a404-97f8bf8b8667" />
+
 
 A simple Java-based chat application designed for Raspberry Pi, enabling real-time messaging over a local network. This project demonstrates core networking concepts in Java and is ideal for learning, tinkering, or building lightweight chat systems on Raspberry Pi devices.
 
