@@ -19,7 +19,6 @@ public class ChatController {
         this.messagingTemplate = messagingTemplate;
     }
 
-    // Serves the chat UI
     @GetMapping("/")
     public String chatPage() {
         return "chat";
@@ -30,7 +29,6 @@ public class ChatController {
     public Map<String, String> handleChatMessage(@Payload Map<String, String> message) {
         String messageContent = message.get("content");
 
-        // Prepare response in a map format, which will be serialized to JSON automatically
         Map<String, String> response = new HashMap<>();
         response.put("content", messageContent);
 
