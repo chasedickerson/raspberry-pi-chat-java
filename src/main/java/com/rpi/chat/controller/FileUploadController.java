@@ -1,5 +1,7 @@
 package com.rpi.chat.controller;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.ResponseEntity;
@@ -11,16 +13,15 @@ import java.io.IOException;
 @RequestMapping("/upload")
 public class FileUploadController {
 
-    private static final String UPLOAD_DIR = "uploads/";  // Directory for uploads
+    private static final String UPLOAD_DIR = "uploads/";
 
-    // Handle file upload
     @PostMapping
     public ResponseEntity<?> handleFileUpload(@RequestParam("file") MultipartFile file) {
         try {
             File uploadDir = new File(UPLOAD_DIR);
 
             String filePath = uploadDir.getAbsolutePath() + File.separator + file.getOriginalFilename();
-            file.transferTo(new File(filePath));  // Save file to the server
+            file.transferTo(new File(filePath));
 
             return ResponseEntity.ok(new FileUploadResponse("/uploads/" + file.getOriginalFilename()));
 
@@ -29,19 +30,12 @@ public class FileUploadController {
         }
     }
 
-    // Class to wrap the file URL in a response
+    @Setter
+    @Getter
     public static class FileUploadResponse {
         private String fileUrl;
 
         public FileUploadResponse(String fileUrl) {
-            this.fileUrl = fileUrl;
-        }
-
-        public String getFileUrl() {
-            return fileUrl;
-        }
-
-        public void setFileUrl(String fileUrl) {
             this.fileUrl = fileUrl;
         }
     }
